@@ -1,0 +1,30 @@
+{
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "properties": {
+    "title": {
+      "$id": "/properties/title",
+      "type": "string",
+      "title": "The Title Schema ",
+      "default": "",
+      "examples": ["Software Engineer IIT"],
+      "minLength": 3
+    },
+    "salary": {
+      "$id": "/properties/salary",
+      "type": "string",
+      "title": "The Salary Schema ",
+      "default": "",
+      "examples": ["150000"],
+      "minLength": 0
+    },
+    "equity": {
+      "$id": "/properties/equity",
+      "type": "number",
+      "title": "The Equity Schema ",
+      "default": 0,
+      "examples": [5.5]
+    }
+  },
+  "required": ["title", "salary"]
+}
