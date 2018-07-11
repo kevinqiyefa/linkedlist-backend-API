@@ -9,6 +9,7 @@ CREATE TABLE companies
   name TEXT NOT NULL,
   logo TEXT,
   handle TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL
 );
 
@@ -17,21 +18,21 @@ CREATE TABLE users
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  first_name TEXT,
-  last_name TEXT,
-  email TEXT,
-  photo TEXT,
-  current_company_id INTEGER REFERENCES companies (id) ON DELETE SET NULL
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  photo TEXT, 
+  current_company TEXT REFERENCES companies (handle) ON DELETE SET NULL
 );
 
 
 CREATE TABLE jobs
 (
   id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  salary TEXT,
+  title TEXT,
+  salary INTEGER,
   equity FLOAT,
-  company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE
+  company INTEGER REFERENCES companies(id) ON DELETE CASCADE
 );
 
 CREATE TABLE jobs_users
@@ -43,35 +44,35 @@ CREATE TABLE jobs_users
 
 
 INSERT INTO companies
-  (name, logo, handle, password)
+  (name, logo, handle, password, email)
 
-VALUES('Google', 'https://cloud.google.com/_static/images/cloud/icons/favicons/onecloud/apple-icon.png', 'test1', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+VALUES('Google', 'https://cloud.google.com/_static/images/cloud/icons/favicons/onecloud/apple-icon.png', 'test1', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'test@gmail.com');
 
 INSERT INTO companies
-  (name, logo, handle, password)
-VALUES('Facebook', 'https://cdn.pixabay.com/photo/2017/10/04/11/58/facebook-2815970_960_720.jpg', 'test2', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+  (name, logo, handle, password, email)
+VALUES('Facebook', 'https://cdn.pixabay.com/photo/2017/10/04/11/58/facebook-2815970_960_720.jpg', 'test2', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'hello@gmail.com');
 
 
 INSERT INTO users
-  (first_name, last_name, email, photo, current_company_id, username, password)
-VALUES('kevin', 'qi', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 1, 'kevinqi', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+  (first_name, last_name, email, photo, current_company, username, password)
+VALUES('kevin', 'qi', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'test1', 'kevinqi', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
 
 INSERT INTO users
-  (first_name, last_name, email, photo, current_company_id, username, password)
-VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 1, 'test', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+  (first_name, last_name, email, photo, current_company, username, password)
+VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'test2', 'test', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
 
 
 INSERT INTO jobs
-  (title, salary, equity, company_id)
-VALUES('Software Engineer', '100000', 4.5, 1);
+  (title, salary, equity, company)
+VALUES('Software Engineer', 100000, 4.5, 1);
 
 INSERT INTO jobs
-  (title, salary, equity, company_id)
-VALUES('Software Engineer II', '120000', 4.8, 1);
+  (title, salary, equity, company)
+VALUES('Software Engineer II', 120000, 4.8, 1);
 
 INSERT INTO jobs
-  (title, salary, equity, company_id)
-VALUES('Web Developer', '120000', 4.7, 1);
+  (title, salary, equity, company)
+VALUES('Web Developer', 120000, 4.7, 1);
 
 INSERT INTO jobs_users
   (job_id,user_id)

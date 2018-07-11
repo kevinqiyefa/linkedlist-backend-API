@@ -22,11 +22,11 @@ beforeAll(async () => {
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    first_name TEXT,
-    last_name TEXT,
-    email TEXT,
-    photo TEXT,
-    current_company_id INTEGER REFERENCES companies (id) ON DELETE SET NULL
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    photo TEXT, 
+    current_company TEXT REFERENCES companies (handle) ON DELETE SET NULL
   );`);
 
   await db.query(`CREATE TABLE jobs
@@ -49,9 +49,10 @@ beforeAll(async () => {
 beforeEach(async () => {
   // login a user, get a token, store the user ID and token
   const hashedPassword = await bcrypt.hash('secret', 1);
-  await db.query("INSERT INTO users (username, password) VALUES ('test', $1)", [
-    hashedPassword
-  ]);
+  await db.query(
+    "INSERT INTO users (username, password, first_name, last_name, email) VALUES ('test', $1, 'kevin', 'qi', 'test@gmail.com')",
+    [hashedPassword]
+  );
   const response = await request(app)
     .post('/users/auth')
     .send({
@@ -101,22 +102,31 @@ describe(`GET / users`, () => {
   });
 });
 
-describe(`DELETE / users/:id`, () => {
-  test('successfully deletes own user', async () => {
+describe(`GET / users/:username`, () => {
+  test('gets a list of 1 user', async () => {
     const response = await request(app)
-      .delete(`/users/${auth.current_user_id}`)
+      .get('/users/:username')
       .set('authorization', auth.user_token);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'Deleted!' });
-  });
-
-  test('cannot delete other user', async () => {
-    const response = await request(app)
-      .delete(`/users/${auth.current_user_id + 1}`)
-      .set('authorization', auth.user_token);
-    expect(response.status).toBe(403);
+    expect(response.body).toHaveLength(1);
   });
 });
+
+// describe(`DELETE / users/:id`, () => {
+//   test('successfully deletes own user', async () => {
+//     const response = await request(app)
+//       .delete(`/users/${auth.current_user_id}`)
+//       .set('authorization', auth.user_token);
+//     expect(response.status).toBe(200);
+//     expect(response.body).toEqual({ message: 'Deleted!' });
+//   });
+
+//   test('cannot delete other user', async () => {
+//     const response = await request(app)
+//       .delete(`/users/${auth.current_user_id + 1}`)
+//       .set('authorization', auth.user_token);
+//     expect(response.status).toBe(403);
+//   });
+// });
 
 // describe(`PATCH / companies/:id`, () => {
 //   test('successfully updates a company', async () => {

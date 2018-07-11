@@ -8,7 +8,8 @@
       "title": "The First_name Schema ",
       "default": "",
       "examples": ["Carrie"],
-      "minLength": 5
+      "minLength": 1,
+      "maxLength": 55
     },
     "last_name": {
       "$id": "/properties/last_name",
@@ -16,7 +17,8 @@
       "title": "The Last_name Schema ",
       "default": "",
       "examples": ["Lu"],
-      "minLength": 3
+      "minLength": 1,
+      "maxLength": 55
     },
     "email": {
       "$id": "/properties/email",
@@ -24,7 +26,8 @@
       "title": "The Email Schema ",
       "default": "",
       "examples": ["test@gmail.com"],
-      "minLength": 5
+      "minLength": 1,
+      "maxLength": 55
     },
     "photo": {
       "$id": "/properties/photo",
@@ -33,10 +36,10 @@
       "default": "",
       "examples": ["https://i.imgur.com/gdWIxn2.jpg"]
     },
-    "current_company_id": {
-      "$id": "/properties/current_company_id",
+    "current_company": {
+      "$id": "/properties/current_company",
       "type": "integer",
-      "title": "The Current_company_id Schema ",
+      "title": "The Current_company Schema ",
       "default": 0,
       "examples": [1]
     },
@@ -46,7 +49,8 @@
       "title": "The Username Schema ",
       "default": "",
       "examples": ["carrie"],
-      "minLength": 5
+      "minLength": 1,
+      "maxLength": 55
     },
     "password": {
       "$id": "/properties/password",
@@ -54,7 +58,8 @@
       "title": "The Password Schema ",
       "default": "",
       "examples": ["test"],
-      "minLength": 5
+      "minLength": 1,
+      "maxLength": 55
     }
   },
   "required": ["first_name", "last_name", "email", "username", "password"]

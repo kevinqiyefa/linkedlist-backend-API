@@ -35,24 +35,24 @@ router.post('', async function(req, res, next) {
   }
 });
 
-router.get('/:id', ensureloggedin, async function(req, res, next) {
+router.get('/:handle', ensureloggedin, async function(req, res, next) {
   try {
     const companiesData = await db.query(
-      'SELECT * FROM companies WHERE id=$1',
-      [req.params.id]
+      'SELECT * FROM companies WHERE handle=$1',
+      [req.params.handle]
     );
 
-    const usersData = await db.query(
-      'SELECT * FROM users WHERE current_company_id=$1',
-      [req.params.id]
+    const employeeData = await db.query(
+      'SELECT * FROM users WHERE current_company=$1',
+      [req.params.handle]
     );
 
-    let usersID = usersData.rows.map(x => x.id);
+    let employeesName = employeeData.rows.map(x => x.username);
 
-    companiesData.rows[0].users = usersID;
+    companiesData.rows[0].users = employeesName;
 
-    const jobsData = await db.query('SELECT * FROM jobs WHERE company_id=$1', [
-      req.params.id
+    const jobsData = await db.query('SELECT * FROM jobs WHERE company=$1', [
+      companiesData.id
     ]);
 
     let jobsID = jobsData.rows.map(x => x.id);

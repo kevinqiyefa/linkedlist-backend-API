@@ -43,24 +43,25 @@ router.post('', async function(req, res, next) {
   }
 });
 
-router.get('/:id', ensureloggedin, async function(req, res, next) {
+router.get('/:username', ensureloggedin, async function(req, res, next) {
   try {
-    const userdata = await db.query('SELECT * FROM users WHERE id=$1', [
-      req.params.id
+    const userdata = await db.query('SELECT * FROM users WHERE username=$1', [
+      req.params.username
     ]);
 
     const jobsdata = await db.query(
       'SELECT job_id FROM jobs_users where user_id=$1',
-      [req.params.id]
+      [userdata.id]
     );
-    userdata.rows[0].jobs = jobsdata.rows.map(x => x.job_id);
+    console.log(jobsdata);
+    userdata.rows[0].applied_to = jobsdata.rows.map(x => x.job_id);
     return res.json(userdata.rows[0]);
   } catch (err) {
     return next(err);
   }
 });
 
-router.patch('/:id', ensureCorrectUser, async function(req, res, next) {
+router.patch('/:username', ensureCorrectUser, async function(req, res, next) {
   try {
     const result = validate(req.body, userSchema);
     if (!result.valid) {
@@ -70,16 +71,16 @@ router.patch('/:id', ensureCorrectUser, async function(req, res, next) {
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     console.log(hashPassword);
     const data = await db.query(
-      'UPDATE users SET first_name=$1, last_name=$2, email=$3, photo=$4, current_company_id=$5, username=$6, password=$7 WHERE id=$8 RETURNING *',
+      'UPDATE users SET first_name=$1, last_name=$2, email=$3, photo=$4, current_company=$5, username=$6, password=$7 WHERE username=$8 RETURNING *',
       [
         req.body.first_name,
         req.body.last_name,
         req.body.email,
         req.body.photo,
-        req.body.current_company_id,
+        req.body.current_company,
         req.body.username,
         hashPassword,
-        req.params.id
+        req.params.username
       ]
     );
     delete data.rows[0].password;
