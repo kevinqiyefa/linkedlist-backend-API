@@ -26,8 +26,8 @@
       "title": "The Email Schema ",
       "default": "",
       "examples": ["test@gmail.com"],
-      "minLength": 1,
-      "maxLength": 55
+      "minLength": 6,
+      "maxLength": 60
     },
     "photo": {
       "$id": "/properties/photo",
@@ -58,7 +58,7 @@
       "title": "The Password Schema ",
       "default": "",
       "examples": ["test"],
-      "minLength": 1,
+      "minLength": 5,
       "maxLength": 55
     }
   },

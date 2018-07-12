@@ -127,6 +127,35 @@ describe(`POST / user-auth`, () => {
   });
 });
 
+describe(`POST /companies`, () => {
+  test('create a new company', async () => {
+    const response = await request(app)
+      .post('/companies')
+      .send({
+        name: 'Google',
+        email: 'google@gmail.com',
+        handle: 'go',
+        password: 'foo123',
+        logo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
+      });
+
+    expect(response.body.name).toBe('Google');
+  });
+});
+
+describe(`POST / company-auth`, () => {
+  test('gets a token', async () => {
+    const response = await request(app)
+      .post('/company-auth')
+      .send({
+        handle: 'go',
+        password: 'foo123'
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.token).not.toEqual(undefined);
+  });
+});
+
 // describe(`GET / users/:username`, () => {
 //   test('gets a list of 1 user', async () => {
 //     const response = await request(app)

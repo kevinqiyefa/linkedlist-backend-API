@@ -36,7 +36,7 @@
       "title": "The Password Schema ",
       "default": "",
       "examples": ["12345"],
-      "minLength": 1,
+      "minLength": 5,
       "maxLength": 55
     },
     "email": {
@@ -46,8 +46,8 @@
       "default": "",
       "format": "email",
       "examples": ["fb@gmail.com"],
-      "minLength": 1,
-      "maxLength": 55
+      "minLength": 6,
+      "maxLength": 60
     }
   },
   "required": ["name", "handle", "password", "email"]

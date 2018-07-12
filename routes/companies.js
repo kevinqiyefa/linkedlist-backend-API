@@ -25,8 +25,14 @@ router.post('', async function(req, res, next) {
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
-      'INSERT INTO companies (name, logo, handle, password) VALUES($1, $2, $3, $4) RETURNING *',
-      [req.body.name, req.body.logo, req.body.handle, hashPassword]
+      'INSERT INTO companies (name, logo, handle, password, email) VALUES($1, $2, $3, $4, $5) RETURNING *',
+      [
+        req.body.name,
+        req.body.logo,
+        req.body.handle,
+        hashPassword,
+        req.body.email
+      ]
     );
     delete data.rows[0].password;
     return res.json(data.rows[0]);
