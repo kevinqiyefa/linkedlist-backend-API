@@ -6,10 +6,48 @@ const jwt = require('jsonwebtoken');
 const { ensureloggedin, ensureCorrectCompany } = require('../middleware/auth');
 const { validate } = require('jsonschema');
 const companySchema = require('../jsonSchema/companies');
+const APIError = require('../APIError');
 
 router.get('', ensureloggedin, async function(req, res, next) {
   try {
-    const data = await db.query('SELECT * FROM companies');
+    // const data = await db.query('SELECT * FROM companies');
+    // return res.json(data.rows);
+    const offset = req.query.offset ? req.query.offset : 0;
+    const limit =
+      req.query.limit && req.query.limit < 50 ? req.query.limit : 50;
+
+    const search = req.query.search ? req.query.search + '%' : req.query.search;
+    let data;
+
+    if (!search) {
+      data = await db.query('SELECT * FROM companies LIMIT $1 OFFSET $2', [
+        limit,
+        offset
+      ]);
+    } else {
+      data = await db.query(
+        'SELECT * FROM companies WHERE handle ILIKE $1 LIMIT $2 OFFSET $3',
+        [search, limit, offset]
+      );
+    }
+
+    for (let company of data.rows) {
+      const employeeData = await db.query(
+        'SELECT * FROM users WHERE current_company=$1',
+        [company.handle]
+      );
+
+      let employeesName = employeeData.rows.map(x => x.username);
+
+      company.employees = employeesName;
+
+      const jobsData = await db.query('SELECT * FROM jobs WHERE company=$1', [
+        company.id
+      ]);
+      let jobsID = jobsData.rows.map(job => job.id);
+      company.jobs = jobsID;
+      delete company.password;
+    }
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -21,7 +59,13 @@ router.post('', async function(req, res, next) {
     const result = validate(req.body, companySchema);
     if (!result.valid) {
       // pass the validation errors to the error handler
-      return next(result.errors.map(e => e.stack));
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          result.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
@@ -75,7 +119,13 @@ router.patch('/:handle', ensureCorrectCompany, async function(req, res, next) {
     const result = validate(req.body, companySchema);
     if (!result.valid) {
       // pass the validation errors to the error handler
-      return next(result.errors.map(e => e.stack));
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          result.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
@@ -83,7 +133,7 @@ router.patch('/:handle', ensureCorrectCompany, async function(req, res, next) {
       [
         req.body.name,
         req.body.logo,
-        req.body.handle,
+        req.params.handle,
         hashPassword,
         req.body.email,
         req.params.handle

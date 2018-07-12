@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const { ensureloggedin, ensureCorrectUser } = require('../middleware/auth');
 const { validate } = require('jsonschema');
 const userSchema = require('../jsonSchema/users');
-const APIError = require('./APIError');
+const APIError = require('../APIError');
 
 router.get('', ensureloggedin, async function(req, res, next) {
   try {
@@ -28,9 +28,8 @@ router.get('', ensureloggedin, async function(req, res, next) {
         [search, limit, offset]
       );
     }
-    //console.log(data);
+
     for (let user of data.rows) {
-      console.log(user);
       const jobsdata = await db.query(
         'SELECT job_id FROM jobs_users where user_id=$1',
         [user.id]
@@ -49,7 +48,13 @@ router.post('', async function(req, res, next) {
     const result = validate(req.body, userSchema);
     if (!result.valid) {
       // pass the validation errors to the error handler
-      return next(result.errors.map(e => e.stack));
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          result.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const newUser = await db.query(
@@ -67,7 +72,6 @@ router.post('', async function(req, res, next) {
     delete newUser.rows[0].password;
     return res.json(newUser.rows[0]);
   } catch (err) {
-    console.log(err);
     return next(err);
   }
 });
@@ -80,9 +84,8 @@ router.get('/:username', ensureloggedin, async function(req, res, next) {
 
     const jobsdata = await db.query(
       'SELECT job_id FROM jobs_users where user_id=$1',
-      [userdata.id]
+      [userdata.rows[0].id]
     );
-    console.log(userdata);
     userdata.rows[0].applied_to = jobsdata.rows.map(x => x.job_id);
     delete userdata.rows[0].password;
     return res.json(userdata.rows[0]);
@@ -98,10 +101,17 @@ router.patch('/:username', ensureCorrectUser, async function(req, res, next) {
       // pass the validation errors to the error handler
       // use new APIError (status, text, message)
       // will get an array
-      return next(result.errors.map(e => e.stack));
+
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          result.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
-    console.log(hashPassword);
+
     const data = await db.query(
       'UPDATE users SET first_name=$1, last_name=$2, email=$3, photo=$4, current_company=$5, username=$6, password=$7 WHERE username=$8 RETURNING *',
       [
@@ -110,7 +120,7 @@ router.patch('/:username', ensureCorrectUser, async function(req, res, next) {
         req.body.email,
         req.body.photo,
         req.body.current_company,
-        req.body.username,
+        req.params.username,
         hashPassword,
         req.params.username
       ]

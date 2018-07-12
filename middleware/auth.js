@@ -17,7 +17,7 @@ function ensureCorrectUser(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, 'SECRET');
 
-    if (decodedToken.user_id === +req.params.id) {
+    if (decodedToken.username === req.params.username) {
       return next();
     } else {
       return res.json({
@@ -36,16 +36,16 @@ function ensureLoginCompany(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, 'SECRET');
 
-    if (decodedToken.company_id) {
+    if (decodedToken.handle) {
       return next();
     } else {
       return res.json({
-        message: 'Unauthorized'
+        message: 'Unauthorized token'
       });
     }
   } catch (err) {
     return res.json({
-      message: 'Unauthorized'
+      message: 'ERROR'
     });
   }
 }
@@ -55,16 +55,16 @@ function ensureCorrectCompany(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, 'SECRET');
 
-    if (decodedToken.company_id === +req.params.id) {
+    if (decodedToken.handle === req.params.handle) {
       return next();
     } else {
       return res.json({
-        message: 'Unauthorized'
+        message: 'Unauthorized TOKEN'
       });
     }
   } catch (err) {
     return res.json({
-      message: 'Unauthorized'
+      message: 'ERROR'
     });
   }
 }
