@@ -9,7 +9,33 @@ const userSchema = require('../jsonSchema/users');
 
 router.get('', ensureloggedin, async function(req, res, next) {
   try {
-    const data = await db.query('SELECT * FROM users');
+    const offset = req.query.offset ? req.query.offset : 0;
+    const limit =
+      req.query.limit && req.query.limit < 50 ? req.query.limit : 50;
+
+    const search = req.query.search ? req.query.search + '%' : req.query.search;
+    let data;
+    //console.log(search);
+    if (!search) {
+      data = await db.query('SELECT * FROM users LIMIT $1 OFFSET $2', [
+        limit,
+        offset
+      ]);
+    } else {
+      data = await db.query(
+        'SELECT * FROM users WHERE username ILIKE $1 LIMIT $2 OFFSET $3',
+        [search, limit, offset]
+      );
+    }
+    //console.log(data);
+    for (let user of data.rows) {
+      console.log(user);
+      const jobsdata = await db.query(
+        'SELECT job_id FROM jobs_users where user_id=$1',
+        [user.id]
+      );
+      user.applied_to = jobsdata.rows.map(x => x.job_id);
+    }
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -54,7 +80,7 @@ router.get('/:username', ensureloggedin, async function(req, res, next) {
       'SELECT job_id FROM jobs_users where user_id=$1',
       [userdata.id]
     );
-    console.log(jobsdata);
+    //console.log(jobsdata);
     userdata.rows[0].applied_to = jobsdata.rows.map(x => x.job_id);
     return res.json(userdata.rows[0]);
   } catch (err) {
