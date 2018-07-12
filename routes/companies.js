@@ -64,7 +64,7 @@ router.get('/:handle', ensureloggedin, async function(req, res, next) {
   }
 });
 
-router.patch('/:id', ensureCorrectCompany, async function(req, res, next) {
+router.patch('/:handle', ensureCorrectCompany, async function(req, res, next) {
   try {
     const result = validate(req.body, companySchema);
     if (!result.valid) {
@@ -73,13 +73,14 @@ router.patch('/:id', ensureCorrectCompany, async function(req, res, next) {
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
-      'UPDATE companies SET name=$1, logo=$2, handle=$3, password=$4 WHERE id=$5 RETURNING *',
+      'UPDATE companies SET name=$1, logo=$2, handle=$3, password=$4 , email=$5 WHERE handle=$6 RETURNING *',
       [
         req.body.name,
         req.body.logo,
         req.body.handle,
         hashPassword,
-        req.params.id
+        req.body.email,
+        req.params.handle
       ]
     );
     delete data.rows[0].password;
@@ -89,45 +90,12 @@ router.patch('/:id', ensureCorrectCompany, async function(req, res, next) {
   }
 });
 
-router.delete('/:id', ensureCorrectCompany, async function(req, res, next) {
+router.delete('/:handle', ensureCorrectCompany, async function(req, res, next) {
   try {
-    const data = await db.query('DELETE FROM companies WHERE id=$1', [
-      req.params.id
+    const data = await db.query('DELETE FROM companies WHERE handle=$1', [
+      req.params.handle
     ]);
-    return res.json({ message: 'Deleted!' });
-  } catch (err) {
-    return next(err);
-  }
-});
-
-router.post('/auth', async (req, res, next) => {
-  try {
-    const foundCompany = await db.query(
-      'SELECT * FROM companies WHERE handle=$1',
-      [req.body.handle]
-    );
-
-    if (foundCompany.rows.length === 0) {
-      return res.json({ message: 'Invalid Credentials!' });
-    }
-
-    const result = await bcrypt.compare(
-      req.body.password,
-      foundCompany.rows[0].password
-    );
-
-    if (!result) {
-      return res.json({ message: 'Invalid Credentials!' });
-    } else {
-      const token = jwt.sign(
-        {
-          company_id: foundCompany.rows[0].id
-        },
-        'SECRET'
-      );
-
-      return res.json({ token });
-    }
+    return res.json({ message: 'Deleted company!' });
   } catch (err) {
     return next(err);
   }

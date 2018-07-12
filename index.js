@@ -3,6 +3,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const userRoutes = require('./routes/users');
+const userAuth = require('./routes/user-auth');
+const companyAuth = require('./routes/company-auth');
 const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
 const userJobRoutes = require('./routes/jobs_users');
@@ -12,6 +14,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 app.use('/users', userRoutes);
+app.post('/user-auth', userAuth);
+app.post('/company-auth', companyAuth);
 app.use('/companies', companyRoutes);
 app.use('/jobs', jobRoutes);
 app.use('/jobs_users', userJobRoutes);
@@ -29,14 +33,14 @@ app.use((req, res, next) => {
   handler's "next"
  */
 app.use((err, req, res, next) => {
-  res.status(err.status || 500);
-  return res.json({
-    message: err.message,
-    /*
-         if we're in development mode, include stack trace (full error object)
-         otherwise, it's an empty object so the user doesn't see all of that
-        */
-    error: app.get('env') === 'development' ? err : {}
+  if (Array.isArray(err)) {
+    err.message = err.join(' | ');
+  }
+  return res.status(err.status || 500).json({
+    error: {
+      message: err.message,
+      status: err.status || 500
+    }
   });
 });
 

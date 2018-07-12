@@ -38,10 +38,10 @@
     },
     "current_company": {
       "$id": "/properties/current_company",
-      "type": "integer",
+      "type": ["string", "null"],
       "title": "The Current_company Schema ",
       "default": 0,
-      "examples": [1]
+      "examples": ["Google"]
     },
     "username": {
       "$id": "/properties/username",

@@ -11,9 +11,10 @@ beforeAll(async () => {
   await db.query(`CREATE TABLE companies
   (
     id SERIAL PRIMARY KEY,
-    name TEXT,
+    name TEXT NOT NULL,
     logo TEXT,
     handle TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   );`);
 
@@ -32,10 +33,10 @@ beforeAll(async () => {
   await db.query(`CREATE TABLE jobs
   (
     id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    salary TEXT,
+    title TEXT,
+    salary INTEGER,
     equity FLOAT,
-    company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE
+    company INTEGER REFERENCES companies(id) ON DELETE CASCADE
   );`);
 
   await db.query(`CREATE TABLE jobs_users
@@ -45,45 +46,45 @@ beforeAll(async () => {
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
   );`);
 });
+// SET UP
+// beforeEach(async () => {
+//   // login a user, get a token, store the user ID and token
+//   const hashedPassword = await bcrypt.hash('secret', 1);
+//   await db.query(
+//     `INSERT INTO users (username, password, first_name, last_name, email) VALUES ('kevin', $1, 'john', 'qi', 'ya@gmail.com')`,
+//     [hashedPassword]
+//   );
+//   const response = await request(app)
+//     .post('/users/auth')
+//     .send({
+//       username: 'test',
+//       password: 'secret'
+//     });
 
-beforeEach(async () => {
-  // login a user, get a token, store the user ID and token
-  const hashedPassword = await bcrypt.hash('secret', 1);
-  await db.query(
-    "INSERT INTO users (username, password, first_name, last_name, email) VALUES ('test', $1, 'kevin', 'qi', 'test@gmail.com')",
-    [hashedPassword]
-  );
-  const response = await request(app)
-    .post('/users/auth')
-    .send({
-      username: 'test',
-      password: 'secret'
-    });
+//   auth.user_token = response.body.token;
+//   auth.current_user_id = jwt.decode(auth.user_token).user_id;
 
-  auth.user_token = response.body.token;
-  auth.current_user_id = jwt.decode(auth.user_token).user_id;
+//   // do the same for company "users"
+//   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
+//   await db.query(
+//     "INSERT INTO companies (handle, password) VALUES ('testcompany', $1)",
+//     [hashedCompanyPassword]
+//   );
+//   const companyResponse = await request(app)
+//     .post('/companies/auth')
+//     .send({
+//       handle: 'testcompany',
+//       password: 'secret'
+//     });
 
-  // do the same for company "users"
-  const hashedCompanyPassword = await bcrypt.hash('secret', 1);
-  await db.query(
-    "INSERT INTO companies (handle, password) VALUES ('testcompany', $1)",
-    [hashedCompanyPassword]
-  );
-  const companyResponse = await request(app)
-    .post('/companies/auth')
-    .send({
-      handle: 'testcompany',
-      password: 'secret'
-    });
+//   auth.company_token = companyResponse.body.token;
+//   auth.current_company_id = jwt.decode(auth.company_token).company_id;
+// });
 
-  auth.company_token = companyResponse.body.token;
-  auth.current_company_id = jwt.decode(auth.company_token).company_id;
-});
-
-afterEach(async () => {
-  await db.query('DELETE FROM users');
-  await db.query('DELETE FROM companies');
-});
+// afterEach(async () => {
+//   await db.query('DELETE FROM users');
+//   await db.query('DELETE FROM companies');
+// });
 
 afterAll(async () => {
   await db.query('DROP TABLE IF EXISTS jobs_users');
@@ -93,23 +94,47 @@ afterAll(async () => {
   db.end();
 });
 
-describe(`GET / users`, () => {
-  test('gets a list of 1 user', async () => {
+describe(`POST /users`, () => {
+  test('create a new user', async () => {
     const response = await request(app)
-      .get('/users')
-      .set('authorization', auth.user_token);
-    expect(response.body).toHaveLength(1);
+      .post('/users')
+      .send({
+        first_name: 'Michael',
+        last_name: 'Hueter',
+        username: 'hueter',
+        email: 'michael@rithmschool.com',
+        password: 'foo123',
+        current_company: null,
+        photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
+      });
+    //.set('authorization', auth.user_token);
+    //console.log(response.body);
+    expect(response.body.username).toBe('hueter');
   });
 });
 
-describe(`GET / users/:username`, () => {
-  test('gets a list of 1 user', async () => {
+describe(`POST / user-auth`, () => {
+  test('gets a token', async () => {
     const response = await request(app)
-      .get('/users/:username')
-      .set('authorization', auth.user_token);
-    expect(response.body).toHaveLength(1);
+      .post('/user-auth')
+      .send({
+        username: 'hueter',
+        password: 'foo123'
+      });
+    //console.log(response);
+    expect(response.status).toBe(200);
+    expect(response.body.token).not.toEqual(undefined);
   });
 });
+
+// describe(`GET / users/:username`, () => {
+//   test('gets a list of 1 user', async () => {
+//     const response = await request(app)
+//       .get('/users/:username')
+//       .set('authorization', auth.user_token);
+//     expect(response.body).toHaveLength(1);
+//   });
+// });
 
 // describe(`DELETE / users/:id`, () => {
 //   test('successfully deletes own user', async () => {
