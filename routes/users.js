@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { ensureloggedin, ensureCorrectUser } = require('../middleware/auth');
 const { validate } = require('jsonschema');
 const userSchema = require('../jsonSchema/users');
+const APIError = require('./APIError');
 
 router.get('', ensureloggedin, async function(req, res, next) {
   try {
@@ -35,6 +36,7 @@ router.get('', ensureloggedin, async function(req, res, next) {
         [user.id]
       );
       user.applied_to = jobsdata.rows.map(x => x.job_id);
+      delete user.password;
     }
     return res.json(data.rows);
   } catch (err) {
@@ -80,8 +82,9 @@ router.get('/:username', ensureloggedin, async function(req, res, next) {
       'SELECT job_id FROM jobs_users where user_id=$1',
       [userdata.id]
     );
-    //console.log(jobsdata);
+    console.log(userdata);
     userdata.rows[0].applied_to = jobsdata.rows.map(x => x.job_id);
+    delete userdata.rows[0].password;
     return res.json(userdata.rows[0]);
   } catch (err) {
     return next(err);
@@ -93,6 +96,8 @@ router.patch('/:username', ensureCorrectUser, async function(req, res, next) {
     const result = validate(req.body, userSchema);
     if (!result.valid) {
       // pass the validation errors to the error handler
+      // use new APIError (status, text, message)
+      // will get an array
       return next(result.errors.map(e => e.stack));
     }
     const hashPassword = await bcrypt.hash(req.body.password, 10);

@@ -9,6 +9,7 @@ const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
 const userJobRoutes = require('./routes/jobs_users');
 const cors = require('cors');
+const APIError = require('./APIError');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -32,16 +33,32 @@ app.use((req, res, next) => {
   the first is assumed to be an error passed by another
   handler's "next"
  */
-app.use((err, req, res, next) => {
-  if (Array.isArray(err)) {
-    err.message = err.join(' | ');
+
+// at the bottom of index.js (app file), use this global error handler
+app.use((error, request, response, next) => {
+  // format built-in errors
+  if (!(error instanceof APIError)) {
+    error = new APIError(500, error.type, error.message);
   }
-  return res.status(err.status || 500).json({
-    error: {
-      message: err.message,
-      status: err.status || 500
-    }
-  });
+  // log the error stack if we're in development
+  if (process.env.NODE_ENV === 'development') {
+    console.error(error.stack); //eslint-disable-line no-console
+  }
+
+  return response.status(error.status).json(error);
 });
+
+// old error handler
+// app.use((err, req, res, next) => {
+//   if (Array.isArray(err)) {
+//     err.message = err.join(' | ');
+//   }
+//   return res.status(err.status || 500).json({
+//     error: {
+//       message: err.message,
+//       status: err.status || 500
+//     }
+//   });
+// });
 
 module.exports = app;
