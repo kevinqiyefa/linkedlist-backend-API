@@ -8,6 +8,7 @@ const companyAuth = require('./routes/company-auth');
 const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
 const userJobRoutes = require('./routes/jobs_users');
+const applicationRoutes = require('./routes/applications');
 const cors = require('cors');
 const APIError = require('./APIError');
 
@@ -20,6 +21,7 @@ app.post('/company-auth', companyAuth);
 app.use('/companies', companyRoutes);
 app.use('/jobs', jobRoutes);
 app.use('/jobs_users', userJobRoutes);
+app.use('/jobs/:job_id/applications', applicationRoutes);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

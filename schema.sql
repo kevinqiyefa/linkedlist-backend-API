@@ -21,7 +21,7 @@ CREATE TABLE users
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   email TEXT NOT NULL,
-  photo TEXT, 
+  photo TEXT,
   current_company TEXT REFERENCES companies (handle) ON DELETE SET NULL
 );
 
@@ -42,6 +42,13 @@ CREATE TABLE jobs_users
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE applications
+(
+  id SERIAL PRIMARY KEY,
+  job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
+  username TEXT REFERENCES users(username) ON DELETE CASCADE
+);
+
 
 INSERT INTO companies
   (name, logo, handle, password, email)
@@ -59,7 +66,7 @@ VALUES('kevin', 'qi', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'comp
 
 INSERT INTO users
   (first_name, last_name, email, photo, current_company, username, password)
-VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'facebook', 'test', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'facebook', 'steve', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
 
 
 INSERT INTO jobs
@@ -73,6 +80,14 @@ VALUES('Software Engineer II', '120000', 4.8, 'facebook');
 INSERT INTO jobs
   (title, salary, equity, company)
 VALUES('Web Developer', '120000', 4.7, 'facebook');
+
+INSERT INTO applications
+  (job_id, username)
+VALUES(1, 'kevinqi');
+
+INSERT INTO applications
+  (job_id, username)
+VALUES(2, 'steve'); 
 
 INSERT INTO jobs_users
   (job_id,user_id)
@@ -89,4 +104,6 @@ VALUES(2, 1);
 INSERT INTO jobs_users
   (job_id,user_id)
 VALUES(3, 1);
+
+
 \q

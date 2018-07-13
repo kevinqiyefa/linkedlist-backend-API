@@ -31,6 +31,28 @@ function ensureCorrectUser(req, res, next) {
   }
 }
 
+function ensureLoginUser(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jwt.verify(token, 'SECRET');
+
+    // embed the company handle here
+    if (decodedToken.username) {
+      req.username = decodedToken.username;
+      return next();
+    } else {
+      return res.json({
+        status: 401,
+        message: 'Unauthorized token'
+      });
+    }
+  } catch (err) {
+    return res.json({
+      message: 'Unauthorized'
+    });
+  }
+}
+
 function ensureLoginCompany(req, res, next) {
   try {
     const token = req.headers.authorization;
@@ -75,5 +97,6 @@ module.exports = {
   ensureloggedin,
   ensureCorrectUser,
   ensureCorrectCompany,
-  ensureLoginCompany
+  ensureLoginCompany,
+  ensureLoginUser
 };
