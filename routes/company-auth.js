@@ -11,13 +11,7 @@ async function companyAuth(req, res, next) {
     );
 
     if (foundCompany.rows.length === 0) {
-      return next(
-        new APIError(
-          401,
-          'Unauthorized',
-          'You need to authenticate before accessing this resource.'
-        )
-      );
+      return next(new APIError(404, 'Not Found', 'No handle found'));
     }
 
     const result = await bcrypt.compare(
@@ -27,11 +21,7 @@ async function companyAuth(req, res, next) {
 
     if (!result) {
       return next(
-        new APIError(
-          401,
-          'Unauthorized',
-          'You need to authenticate before accessing this resource.'
-        )
+        new APIError(401, 'Unauthorized', 'double check pw/username.')
       );
     } else {
       const token = jwt.sign(

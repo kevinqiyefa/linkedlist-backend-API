@@ -107,6 +107,15 @@ router.get('/:username', ensureloggedin, async function(req, res, next) {
 
 router.patch('/:username', ensureCorrectUser, async function(req, res, next) {
   try {
+    const companyExists = await db.query(
+      'SELECT * FROM companies WHERE handle=$1',
+      [req.body.current_company]
+    );
+
+    if (!companyExists.rowCount) {
+      return next(new APIError(404, 'Not FOUND', 'Company does not exists!'));
+    }
+
     const result = validate(req.body, userSchema);
     if (!result.valid) {
       // pass the validation errors to the error handler

@@ -62,12 +62,12 @@ beforeEach(async () => {
      VALUES ('Nintendo', 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4', 'Nintendo', 'nintendo@gmail.com', $1) RETURNING *`,
     [nintendoCompanyPassword]
   );
-  const warriorsCompanyResponse = await request(app)
-    .post('/company-auth')
-    .send({
-      handle: 'Warriors',
-      password: 'pw'
-    });
+  // const warriorsCompanyResponse = await request(app)
+  //   .post('/company-auth')
+  //   .send({
+  //     handle: 'Warriors',
+  //     password: 'pw'
+  //   });
   // auth.company_token = warriorsCompanyResponse.body.token;
   // auth.current_handle = jwt.decode(auth.company_token).handle;
   // login a user, get a token, store the user ID and token
@@ -77,15 +77,15 @@ beforeEach(async () => {
     `INSERT INTO users (username, password, first_name, last_name, email) VALUES ('kevin', $1, 'john', 'qi', 'ya@gmail.com')`,
     [hashedPassword]
   );
-  const response = await request(app)
-    .post('/user-auth')
-    .send({
-      username: 'kevin',
-      password: 'secret'
-    });
+  // const response = await request(app)
+  //   .post('/user-auth')
+  //   .send({
+  //     username: 'kevin',
+  //     password: 'secret'
+  //   });
   // AUTH object above, set user_token and current user id to use for later
-  auth.user_token = response.body.token;
-  auth.current_username = jwt.decode(auth.user_token).username;
+  // auth.user_token = response.body.token;
+  // auth.current_username = jwt.decode(auth.user_token).username;
   // do the same for company "users"
   // SETTING UP JOBS
   // text, text, float, text
@@ -180,17 +180,17 @@ describe(`POST / company-auth`, () => {
     expect(response.body.error.title).toBe('Unauthorized');
   });
 
-  // test('gets a validation error', async () => {
-  //   const response = await request(app)
-  //     .post('/company-auth')
-  //     .send({
-  //       handle: 444,
-  //       password: 'pw'
-  //     });
+  test('gets a validation error', async () => {
+    const response = await request(app)
+      .post('/company-auth')
+      .send({
+        handle: 444,
+        password: 'pw'
+      });
 
-  //   expect(response.status).toBe(200);
-  //   expect(response.body.token).not.toEqual(undefined);
-  // });
+    expect(response.status).toBe(404);
+    expect(response.body.error.title).toBe('Not Found');
+  });
 });
 
 describe(`POST /users`, () => {
@@ -206,7 +206,6 @@ describe(`POST /users`, () => {
         current_company: 'Warriors',
         photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
       });
-    // console.log(response);
     expect(response.status).toBe(200);
     expect(response.body.username).toBe('hueter');
   });
@@ -223,7 +222,6 @@ describe(`POST /users`, () => {
         current_company: 'Warriors',
         photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
       });
-    // console.log(response);
     expect(response.status).toBe(400);
     expect(response.body.error.title).toBe('Bad Request');
   });
@@ -240,91 +238,112 @@ describe(`POST /users`, () => {
         current_company: 'Warriors',
         photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
       });
-    // console.log(response);
     expect(response.status).toBe(409);
     expect(response.body.error.title).toBe('Conflict');
   });
 });
 
-// describe(`POST / user-auth`, () => {
-//   test('successfully gets a token', async () => {
-//     const response = await request(app)
-//       .post('/user-auth')
-//       .send({
-//         username: 'hueter',
-//         password: 'foo123'
-//       });
-//     // console.log(Object.keys(response));
-//     auth.user_token = response.body.token;
-//     auth.current_username = jwt.decode(auth.user_token).username;
-//     expect(response.status).toBe(200);
-//     expect(response.body.token).not.toEqual(undefined);
-//   });
-// });
+describe(`POST / user-auth`, () => {
+  test('successfully log in for a user', async () => {
+    const response = await request(app)
+      .post('/user-auth')
+      .send({
+        username: 'kevin',
+        password: 'secret'
+      });
+    auth.user_token = response.body.token;
+    auth.current_username = jwt.decode(auth.user_token).username;
+    expect(response.status).toBe(200);
+    expect(response.body.token).not.toEqual(undefined);
+  });
 
-// describe(`GET / users`, () => {
-//   test('successfully gets all the users', async () => {
-//     const response = await request(app)
-//       .get('/users')
-//       .set('authorization', auth.user_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body[0].username).toBe('hueter');
-//   });
-// });
+  test('gets a unauthorized error', async () => {
+    const response = await request(app)
+      .post('/user-auth')
+      .send({
+        username: 'joe',
+        password: 'secre'
+      });
 
-// describe(`GET / users/:username`, () => {
-//   test('successfully gets a list of 1 user', async () => {
-//     const response = await request(app)
-//       .get(`/users/${auth.current_username}`)
-//       .set('authorization', auth.user_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body.first_name).toBe('Michael');
-//   });
-// });
+    expect(response.status).toBe(404);
+    expect(response.body.error.title).toBe('Not Found');
+  });
 
-// describe(`PATCH / users/:username`, () => {
-//   test('successfully updates a user', async () => {
-//     const response = await request(app)
-//       .patch(`/users/${auth.current_username}`)
-//       .send({
-//         first_name: 'Elie',
-//         last_name: 'Hueter',
-//         username: 'hueter',
-//         email: 'michael@rithmschool.com',
-//         password: 'foo123',
-//         current_company: 'rithm',
-//         photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
-//       })
-//       .set('authorization', auth.user_token);
+  test('gets a validation error', async () => {
+    const response = await request(app)
+      .post('/user-auth')
+      .send({
+        username: 'kevin',
+        password: 'p'
+      });
 
-//     expect(response.status).toBe(200);
-//     expect(response.body.first_name).toEqual('Elie');
-//   });
-// });
+    expect(response.status).toBe(401);
+    expect(response.body.error.title).toBe('Unauthorized');
+  });
+});
 
-// describe(`DELETE / users/:username`, () => {
-//   test('successfully deletes own user', async () => {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_username}`)
-//       .set('authorization', auth.user_token);
-//     delete auth.current_username;
-//     delete auth.user_token;
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEqual({ message: 'Deleted user!' });
-//   });
+describe(`GET / users`, () => {
+  test('successfully gets all the users', async () => {
+    const response = await request(app)
+      .get('/users')
+      .set('authorization', auth.user_token);
+    expect(response.status).toBe(200);
+    expect(response.body[0].username).toBe('kevin');
+  });
+});
 
-//   // test('cannot delete other user', async () => {
-//   //   const username = auth.current_username + '1';
-//   //   console.log(username);
-//   //   const response = await request(app)
-//   //     .delete(`/users/${username}`)
-//   //     .set('authorization', auth.user_token);
-//   //   delete auth.current_username;
-//   //   delete auth.user_token;
-//   //   console.log(response);
-//   //   expect(response.status).toBe(403);
-//   // });
-// });
+describe(`GET / users/:username`, () => {
+  test('successfully gets a list of 1 user', async () => {
+    const response = await request(app)
+      .get(`/users/${auth.current_username}`)
+      .set('authorization', auth.user_token);
+    expect(response.status).toBe(200);
+    expect(response.body.first_name).toBe('john');
+  });
+});
+
+describe(`PATCH / users/:username`, () => {
+  test('successfully updates a user', async () => {
+    const response = await request(app)
+      .patch(`/users/${auth.current_username}`)
+      .send({
+        first_name: 'Elie',
+        last_name: 'Hueter',
+        username: 'hueter',
+        email: 'michael@rithmschool.com',
+        password: 'foo123',
+        current_company: 'Nintendo',
+        photo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
+      })
+      .set('authorization', auth.user_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body.first_name).toEqual('Elie');
+  });
+});
+
+describe(`DELETE / users/:username`, () => {
+  test('successfully deletes own user', async () => {
+    const response = await request(app)
+      .delete(`/users/${auth.current_username}`)
+      .set('authorization', auth.user_token);
+    // delete auth.current_username;
+    // delete auth.user_token;
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Deleted user!' });
+  });
+
+  // figure out later
+  // test('cannot delete other user', async () => {
+  //   const username = auth.current_username + '1';
+  //   const response = await request(app)
+  //     .delete(`/users/${username}`)
+  //     .set('authorization', auth.user_token);
+  //   delete auth.current_username;
+  //   delete auth.user_token;
+  //   expect(response.status).toBe(403);
+  // });
+});
 
 // describe(`GET / companies`, () => {
 //   test('gets all the companies', async () => {

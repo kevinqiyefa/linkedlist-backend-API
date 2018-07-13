@@ -1,6 +1,7 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const APIError = require('../APIError');
 
 async function userAuth(req, res, next) {
   try {
@@ -8,8 +9,8 @@ async function userAuth(req, res, next) {
       req.body.username
     ]);
 
-    if (foundUser.rows.length === 0) {
-      return res.json({ message: 'Invalid Credentials!' });
+    if (!foundUser.rowCount) {
+      return next(new APIError(404, 'Not Found', 'No user found'));
     }
 
     const result = await bcrypt.compare(
@@ -18,7 +19,13 @@ async function userAuth(req, res, next) {
     );
 
     if (!result) {
-      return res.json({ message: 'Invalid Credentials!' });
+      return next(
+        new APIError(
+          401,
+          'Unauthorized',
+          'You need to authenticate before accessing this resource.'
+        )
+      );
     } else {
       const token = jwt.sign(
         {
