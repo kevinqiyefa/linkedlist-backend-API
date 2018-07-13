@@ -78,20 +78,14 @@ router.get('/:id', ensureloggedin, async function(req, res, next) {
 // job/:id
 router.patch('/:id', ensureLoginCompany, async function(req, res, next) {
   try {
-    // SELECT * FROM jobs WHERE id = $1;
     const job = await db.query('SELECT * FROM jobs WHERE id=$1', [
       req.params.id
     ]);
-    // compare req.company_handle with job.company
 
     const result = validate(req.body, jobSchema);
     if (job.rows[0].company !== req.handle) {
       return next(
-        new APIError(
-          401,
-          'Unauthorized',
-          result.errors.map(e => e.stack).join('. ')
-        )
+        new APIError(401, 'Unauthorized', 'You cannot edit others job posts!')
       );
     }
     //  if its not the same company handle, next(err)
@@ -105,7 +99,7 @@ router.patch('/:id', ensureLoginCompany, async function(req, res, next) {
         )
       );
     }
-    // console.log('HANDLE', req.handle);
+
     const data = await db.query(
       'UPDATE jobs SET title=$1, salary=$2, equity=$3, company=$4 WHERE id=$5 RETURNING *',
       [
@@ -127,9 +121,7 @@ router.delete('/:id', ensureLoginCompany, async function(req, res, next) {
     const job = await db.query('SELECT * FROM jobs WHERE id=$1', [
       req.params.id
     ]);
-    // compare req.company_handle with job.company
 
-    //const result = validate(req.body, jobSchema);
     if (job.rows[0].company !== req.handle) {
       return next(
         new APIError(401, 'Unauthorized', 'Cannot delete other jobs')
