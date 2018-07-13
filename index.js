@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 // at the bottom of index.js (app file), use this global error handler
 app.use((error, request, response, next) => {
   // format built-in errors
-  console.error(error);
+  //console.error(error);
   if (!(error instanceof APIError)) {
     error = new APIError(500, error.type, error.message);
   }
