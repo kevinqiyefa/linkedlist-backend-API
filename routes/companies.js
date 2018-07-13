@@ -65,6 +65,23 @@ router.post('', async function(req, res, next) {
         )
       );
     }
+
+    // Query for company with that handle
+    // if it exists, return next(new APIError(409, 'Conflict', 'Company with that handle exists already.'))
+    const handle = await db.query('SELECT * FROM companies WHERE handle=$1', [
+      req.body.handle
+    ]);
+
+    if (handle.rowCount) {
+      return next(
+        new APIError(
+          409,
+          'Conflict',
+          'Company with that handle exists already.'
+        )
+      );
+    }
+
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
       'INSERT INTO companies (name, logo, handle, password, email) VALUES($1, $2, $3, $4, $5) RETURNING *',
@@ -76,6 +93,7 @@ router.post('', async function(req, res, next) {
         req.body.email
       ]
     );
+
     delete data.rows[0].password;
     return res.json(data.rows[0]);
   } catch (err) {

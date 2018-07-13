@@ -56,6 +56,17 @@ router.post('', async function(req, res, next) {
         )
       );
     }
+
+    const username = await db.query('SELECT * FROM users WHERE username=$1', [
+      req.body.username
+    ]);
+
+    if (username.rowCount) {
+      return next(
+        new APIError(409, 'Conflict', 'User with that username exists already.')
+      );
+    }
+
     const hashPassword = await bcrypt.hash(req.body.password, 10);
     const newUser = await db.query(
       'INSERT INTO users (first_name, last_name, email, photo, current_company, username, password) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *',

@@ -1,6 +1,7 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const APIError = require('../APIError');
 
 async function companyAuth(req, res, next) {
   try {
@@ -10,7 +11,13 @@ async function companyAuth(req, res, next) {
     );
 
     if (foundCompany.rows.length === 0) {
-      return res.json({ message: 'Invalid Credentials!' });
+      return next(
+        new APIError(
+          401,
+          'Unauthorized',
+          'You need to authenticate before accessing this resource.'
+        )
+      );
     }
 
     const result = await bcrypt.compare(
@@ -19,7 +26,13 @@ async function companyAuth(req, res, next) {
     );
 
     if (!result) {
-      return res.json({ message: 'Invalid Credentials!' });
+      return next(
+        new APIError(
+          401,
+          'Unauthorized',
+          'You need to authenticate before accessing this resource.'
+        )
+      );
     } else {
       const token = jwt.sign(
         {
