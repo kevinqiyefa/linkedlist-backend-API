@@ -37,13 +37,11 @@ app.use((req, res, next) => {
 // at the bottom of index.js (app file), use this global error handler
 app.use((error, request, response, next) => {
   // format built-in errors
+  console.error(error);
   if (!(error instanceof APIError)) {
     error = new APIError(500, error.type, error.message);
   }
   // log the error stack if we're in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error(error.stack); //eslint-disable-line no-console
-  }
 
   return response.status(error.status).json(error);
 });

@@ -30,9 +30,9 @@ CREATE TABLE jobs
 (
   id SERIAL PRIMARY KEY,
   title TEXT,
-  salary INTEGER,
+  salary TEXT,
   equity FLOAT,
-  company INTEGER REFERENCES companies(id) ON DELETE CASCADE
+  company TEXT REFERENCES companies(handle) ON DELETE CASCADE
 );
 
 CREATE TABLE jobs_users
@@ -46,33 +46,33 @@ CREATE TABLE jobs_users
 INSERT INTO companies
   (name, logo, handle, password, email)
 
-VALUES('Google', 'https://cloud.google.com/_static/images/cloud/icons/favicons/onecloud/apple-icon.png', 'test1', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'test@gmail.com');
+VALUES('Google', 'https://cloud.google.com/_static/images/cloud/icons/favicons/onecloud/apple-icon.png', 'company1', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'test@gmail.com');
 
 INSERT INTO companies
   (name, logo, handle, password, email)
-VALUES('Facebook', 'https://cdn.pixabay.com/photo/2017/10/04/11/58/facebook-2815970_960_720.jpg', 'test2', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'hello@gmail.com');
+VALUES('Facebook', 'https://cdn.pixabay.com/photo/2017/10/04/11/58/facebook-2815970_960_720.jpg', 'facebook', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy', 'hello@gmail.com');
 
 
 INSERT INTO users
   (first_name, last_name, email, photo, current_company, username, password)
-VALUES('kevin', 'qi', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'test1', 'kevinqi', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+VALUES('kevin', 'qi', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'company1', 'kevinqi', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
 
 INSERT INTO users
   (first_name, last_name, email, photo, current_company, username, password)
-VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'test2', 'test', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
+VALUES('testing', 'tt', 'test@gmail.com', 'https://i.imgur.com/gdWIxn2.jpg', 'facebook', 'test', '$2b$10$rLko4MzKDmeYQ10Rs5o6C.TAGfKNaFGlCxrXRAKFQRHcyPrI/K/iy');
 
 
 INSERT INTO jobs
   (title, salary, equity, company)
-VALUES('Software Engineer', 100000, 4.5, 1);
+VALUES('Software Engineer', '100000', 4.5, 'company1');
 
 INSERT INTO jobs
   (title, salary, equity, company)
-VALUES('Software Engineer II', 120000, 4.8, 1);
+VALUES('Software Engineer II', '120000', 4.8, 'facebook');
 
 INSERT INTO jobs
   (title, salary, equity, company)
-VALUES('Web Developer', 120000, 4.7, 1);
+VALUES('Web Developer', '120000', 4.7, 'facebook');
 
 INSERT INTO jobs_users
   (job_id,user_id)

@@ -36,10 +36,13 @@ function ensureLoginCompany(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, 'SECRET');
 
+    // embed the company handle here
     if (decodedToken.handle) {
+      req.handle = decodedToken.handle;
       return next();
     } else {
       return res.json({
+        status: 401,
         message: 'Unauthorized token'
       });
     }
@@ -54,11 +57,11 @@ function ensureCorrectCompany(req, res, next) {
   try {
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, 'SECRET');
-
     if (decodedToken.handle === req.params.handle) {
       return next();
     } else {
       return res.json({
+        status: 401,
         message: 'Unauthorized TOKEN'
       });
     }

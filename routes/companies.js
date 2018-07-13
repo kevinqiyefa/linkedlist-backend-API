@@ -10,8 +10,6 @@ const APIError = require('../APIError');
 
 router.get('', ensureloggedin, async function(req, res, next) {
   try {
-    // const data = await db.query('SELECT * FROM companies');
-    // return res.json(data.rows);
     const offset = req.query.offset ? req.query.offset : 0;
     const limit =
       req.query.limit && req.query.limit < 50 ? req.query.limit : 50;
@@ -42,7 +40,7 @@ router.get('', ensureloggedin, async function(req, res, next) {
       company.employees = employeesName;
 
       const jobsData = await db.query('SELECT * FROM jobs WHERE company=$1', [
-        company.id
+        company.handle
       ]);
       let jobsID = jobsData.rows.map(job => job.id);
       company.jobs = jobsID;
@@ -96,13 +94,11 @@ router.get('/:handle', ensureloggedin, async function(req, res, next) {
       'SELECT * FROM users WHERE current_company=$1',
       [req.params.handle]
     );
-
     let employeesName = employeeData.rows.map(x => x.username);
 
     companiesData.rows[0].users = employeesName;
-
     const jobsData = await db.query('SELECT * FROM jobs WHERE company=$1', [
-      companiesData.id
+      req.params.handle
     ]);
 
     let jobsID = jobsData.rows.map(x => x.id);
