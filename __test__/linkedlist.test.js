@@ -47,58 +47,58 @@ beforeAll(async () => {
   );`);
 });
 // SET UP
-beforeEach(async () => {
-  //   // login a user, get a token, store the user ID and token
-  //   const hashedPassword = await bcrypt.hash('secret', 1);
-  //   await db.query(
-  //     `INSERT INTO users (username, password, first_name, last_name, email) VALUES ('kevin', $1, 'john', 'qi', 'ya@gmail.com')`,
-  //     [hashedPassword]
-  //   );
-  //   const response = await request(app)
-  //     .post('/users/auth')
-  //     .send({
-  //       username: 'test',
-  //       password: 'secret'
-  //     });
-  //   // AUTH object above, set user_token and current user id to use for later
-  //   auth.user_token = response.body.token;
-  //   auth.current_user_id = jwt.decode(auth.user_token).user_id;
-  // do the same for company "users"
-  // handle: Warriors, password: pw (name: Warriors)
-  // const warriorsCompanyPassword = await bcrypt.hash('pw', 1);
-  // await db.query(
-  //   `INSERT INTO companies (name, logo, handle, email, password)
-  //    VALUES ('Warriors', 'https://vignette.wikia.nocookie.net/logopedia/images/c/c0/Cb02u6k4eyzy3zwkxmivf37hj.gif/revision/latest?cb=20150113160445', Warriors, warriors@gmail.com, $1) RETURNING *`,
-  //   [warriorsCompanyPassword]
-  // );
-  // const nintendoCompanyPassword = await bcrypt.hash('pw', 1);
-  // await db.query(
-  //   `INSERT INTO companies (name, logo, handle, email, password)
-  //    VALUES ('Nintendo', 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4', Nintendo, nintendo@gmail.com, $1) RETURNING *`,
-  //   [nintendoCompanyPassword]
-  // );
-  // const warriorsCompanyResponse = await request(app)
-  //   .post('/company-auth')
-  //   .send({
-  //     handle: 'Warriors',
-  //     password: 'pw'
-  //   });
-  // auth.warriors_token = warriorsCompanyResponse.body.token;
-  // auth.warriors_company_handle = jwt.decode(auth.company_token).handle;
-  // SETTING UP JOBS
-  // text, text, float, text
-  // await db.query(
-  //   `INSERT INTO jobs (title, salary, equity, company) VALUES('Super Engineer', '500000', 3.4, 'Warriors') RETURNING *`
-  // );
-  // await db.query(
-  //   `INSERT INTO jobs (title, salary, equity, company) VALUES('Game Tester', '200000', 5, 'Nintendo') RETURNING *`
-  // );
-});
+// beforeEach(async () => {
+//   // login a user, get a token, store the user ID and token
+//   const hashedPassword = await bcrypt.hash('secret', 1);
+//   await db.query(
+//     `INSERT INTO users (username, password, first_name, last_name, email) VALUES ('kevin', $1, 'john', 'qi', 'ya@gmail.com')`,
+//     [hashedPassword]
+//   );
+//   const response = await request(app)
+//     .post('/users/auth')
+//     .send({
+//       username: 'test',
+//       password: 'secret'
+//     });
+//   // AUTH object above, set user_token and current user id to use for later
+//   auth.user_token = response.body.token;
+//   auth.current_user_id = jwt.decode(auth.user_token).user_id;
+// do the same for company "users"
+// handle: Warriors, password: pw (name: Warriors)
+// const warriorsCompanyPassword = await bcrypt.hash('pw', 1);
+// await db.query(
+//   `INSERT INTO companies (name, logo, handle, email, password)
+//    VALUES ('Warriors', 'https://vignette.wikia.nocookie.net/logopedia/images/c/c0/Cb02u6k4eyzy3zwkxmivf37hj.gif/revision/latest?cb=20150113160445', Warriors, warriors@gmail.com, $1) RETURNING *`,
+//   [warriorsCompanyPassword]
+// );
+// const nintendoCompanyPassword = await bcrypt.hash('pw', 1);
+// await db.query(
+//   `INSERT INTO companies (name, logo, handle, email, password)
+//    VALUES ('Nintendo', 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4', Nintendo, nintendo@gmail.com, $1) RETURNING *`,
+//   [nintendoCompanyPassword]
+// );
+// const warriorsCompanyResponse = await request(app)
+//   .post('/company-auth')
+//   .send({
+//     handle: 'Warriors',
+//     password: 'pw'
+//   });
+// auth.warriors_token = warriorsCompanyResponse.body.token;
+// auth.warriors_company_handle = jwt.decode(auth.company_token).handle;
+// SETTING UP JOBS
+// text, text, float, text
+// await db.query(
+//   `INSERT INTO jobs (title, salary, equity, company) VALUES('Super Engineer', '500000', 3.4, 'Warriors') RETURNING *`
+// );
+// await db.query(
+//   `INSERT INTO jobs (title, salary, equity, company) VALUES('Game Tester', '200000', 5, 'Nintendo') RETURNING *`
+// );
+// });
 
-afterEach(async () => {
-  await db.query('DELETE FROM users');
-  await db.query('DELETE FROM companies');
-});
+// afterEach(async () => {
+//   await db.query('DELETE FROM users');
+//   await db.query('DELETE FROM companies');
+// });
 
 afterAll(async () => {
   await db.query('DROP TABLE IF EXISTS jobs_users');
@@ -213,12 +213,13 @@ describe(`PATCH / users/:username`, () => {
   });
 });
 
-describe(`DELETE / users/:id`, () => {
+describe(`DELETE / users/:username`, () => {
   test('successfully deletes own user', async () => {
     const response = await request(app)
       .delete(`/users/${auth.current_username}`)
       .set('authorization', auth.user_token);
-
+    delete auth.current_username;
+    delete auth.user_token;
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Deleted user!' });
   });
@@ -273,23 +274,77 @@ describe(`PATCH / companies/:handle`, () => {
   });
 });
 
-// describe(`POST / company-auth`, () => {
-//   test('gets a token', async () => {
-//     const response = await request(app)
-//       .post('/company-auth')
-//       .send({
-//         handle: 'go',
-//         password: 'foo123'
-//       });
-//     expect(response.status).toBe(200);
-//     expect(response.body.token).not.toEqual(undefined);
-//   });
-// });
+describe(`POST /jobs`, () => {
+  test('successfully post a new job from one company', async () => {
+    const response = await request(app)
+      .post('/jobs')
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'Gamer Tester',
+        company: 'rithm',
+        salary: '200000',
+        equity: 5.5
+      });
+    //console.log(response.body);
+    expect(response.status).toBe(200);
+    expect(response.body.company).toBe('rithm');
+  });
+});
 
-//   test('cannot delete other user', async () => {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_user_id + 1}`)
-//       .set('authorization', auth.user_token);
-//     expect(response.status).toBe(403);
-//   });
-// });
+describe(`GET / jobs`, () => {
+  test('gets all the jobs', async () => {
+    const response = await request(app)
+      .get('/jobs')
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body[0].title).toBe('Gamer Tester');
+  });
+});
+
+describe(`GET / jobs/:id`, () => {
+  test('gets a list of 1 jobs', async () => {
+    const response = await request(app)
+      .get(`/jobs/1`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body.company).toBe('rithm');
+  });
+});
+
+describe(`PATCH / jobs/:id`, () => {
+  test('successfully updates a job if it belongs to the correct company', async () => {
+    const response = await request(app)
+      .patch(`/jobs/1`)
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'Student',
+        company: 'rithm',
+        salary: '100000',
+        equity: 1
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Student');
+  });
+});
+
+describe(`DELETE / jobs/:id`, () => {
+  test('successfully deletes a job if the job belongs to the correct company', async () => {
+    const response = await request(app)
+      .delete(`/jobs/1`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Deleted a job!!!' });
+  });
+});
+
+describe(`DELETE / companies/:handle`, () => {
+  test('successfully deletes own company', async () => {
+    const response = await request(app)
+      .delete(`/companies/${auth.current_handle}`)
+      .set('authorization', auth.company_token);
+    delete auth.current_handle;
+    delete auth.company_token;
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Deleted company!' });
+  });
+});

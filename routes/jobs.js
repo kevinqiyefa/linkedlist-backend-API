@@ -131,7 +131,7 @@ router.delete('/:id', ensureLoginCompany, async function(req, res, next) {
     const data = await db.query('DELETE FROM jobs WHERE id=$1', [
       req.params.id
     ]);
-    return res.json({ message: 'Deleted!' });
+    return res.json({ message: 'Deleted a job!!!' });
   } catch (err) {
     return next(err);
   }
