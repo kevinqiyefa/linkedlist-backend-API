@@ -1,181 +1,75 @@
-# Express + PG - Users / Companies / Jobs
+# LinkedList Project
 
-## Part I - Users
+LinkedIn/AngelList type of clone.
 
-- Create a table for users, each user should have a:
+## Backend
 
-  - first_name
-  - last_name
-  - email
-  - photo
+### High-Level Requirements
 
-- Here is what a user object looks like:
+1.  The backend should be a RESTful API using JSON.
+1.  The server must be Node.js and Express.js, and the database must be PostgreSQL.
+1.  The API must be built to spec according to the [documentation on Apiary](https://linkedlist.docs.apiary.io/).
+1.  The server must implement authentication using JWT and encrypt passwords in the database.
+1.  The server must have automated endpoint tests, written with Jest/SuperTest, for each endpoint.
+1.  (BONUS) The server must be deployed to Heroku.
 
-  ```js
-  {
-    "id": 1,
-    "first_name": "Michael",
-    "last_name": "Hueter",
-    "email": "michael@rithmschool.com",
-    "photo": "https://avatars0.githubusercontent.com/u/13444851?s=460&v=4",
-    "company_id": 1, // MANY-TO-ONE with Companies --> THIS IS IMPLEMENTED IN THE NEXT SECTION
-    "jobs": [2, 3] // MANY-TO-MANY with Jobs --> THIS IS IMPLEMENTED IN THE FINAL SECTION
-  }
-  ```
+### Specific Requirements
 
-- Create an API that has the following five routes:
+1.  The server should validate bad inputs for every POST and PATCH request and issue `400 - Bad Request` responses.
+    - (BONUS) The server should validate proper email formats.
+    - (BONUS) The server should validate proper URI formats.
+1.  The server should issue `409 - Conflict` responses when trying to create a `username` or company `handle` that already exists.
+1.  Users cannot edit or delete users other than themselves.
+1.  Companies cannot edit or delete companies other than themselves.
+1.  Users can create, view, or delete job applications `/jobs/:id/applications`. Companies can only view or delete job applications.
+1.  Companies cannot edit or delete job listings by other companies.
+1.  Deleting a company should delete all of the jobs that the company posted.
+1.  Deleting a company should make users who work at that company have `null` for their `current_company` fields.
+1.  Hashed passwords should not be visible on any of the responses.
+1.  (BONUS) For the following three endpoints: `GET /users`, `GET /companies`, `GET /jobs` implement `offset` and `limit` query parameters. For instance `/users?limit=10` should return the first 10 users, and `/users?offset=10&limit=10` should return the next 10 users.
+1.  (BONUS) For the following three endpoints: `GET /users`, `GET /companies`, `GET /jobs` implement `search` queries, for instance `/users?search=Matt+Lane` should issue a search for `Matt Lane` in the database.
 
-  - `POST /users` - this should create a new user
-  - `GET /users` - this should return a list of all the user objects
-  - `GET /users/:id` - this should return a single user found by its `id`
-  - `PATCH /users/:id` - this should update an existing user and return the updated user
-  - `DELETE /users/:id` - this should remove an existing user and return the deleted user
+### Backend Solution
 
-- **BONUS** - add a frontend that allows for seeing all the users, creating new users and deleting users. Do not worry about any kind of authentication/authorization.
+[Here](https://github.com/rithmschool/LinkedList/tree/master/backend) is the instructor solution for the backend. There are instructions in this folder's README for how to run the app locally so you can build the frontend.
 
-- **BONUS** - add front-end functionality for updating users. This will involve writing quite a bit more jQuery to accomplish this task.
+## Frontend
 
-- **BONUS** - Use vanilla JavaScript instead of jQuery.
+Check out these [mocks](https://app.moqups.com/michael@rithmschool.com/vgRzAjTRTd/view)!
 
-## Part II - Companies
+### Technical
 
-**Before you continue, make sure you have completed the exercises in the previous section. This exercise builds off of the previous exercise.**
+1.  The frontend should be a single page application that utilizes React and Redux.
+1.  (BONUS) The frontend should be mobile-optimized.
 
-Create a table for `companies`, each company should have a:
+### Users Epic
 
-- name
-- logo
+1.  As a user, I should be able to sign up, which directs me to my feed.
+1.  As a user, I should be able to log in, which directs me to my feed.
+1.  As a user, I should have a feed which consists of the latest job listings.
+1.  As a user, I should be able to have a resume which serves as my profile page.
+1.  As a user, I should be able to visit a company's profile page.
+1.  As a user, I should be able to visit another user's profile page.
+1.  As a user, I should be able to apply to a job.
+1.  As a user, I should be able to search for companies.
+1.  As a user, I should be able to search for other users.
+1.  (_Bonus_) As a user, I should be able to connect or disconnect with another user by clicking on a button on their profile page.
+1.  (_Bonus_) As a user, I should have a feed of all of my connections.
+1.  (_Bonus_) As a user, I should be able to upload a profile picture.
+1.  (_Bonus_) As a user, I should be able to send a message to another user.
+1.  (_Bonus_) As a user, I should be able to respond to a message.
+1.  (_Bonus_) As a user, I should have a list of all of my messages from other users.
 
-- Next, add a column to your users table called `current_company_id` which is a foreign key that references the companies table. In this relationship, one company has many users, and each user belongs to a single company. Make sure then when a company is deleted, all of the users associated with that company are deleted also.
+### Companies Epic
 
-- Create an API that has the following five routes:
-
-  - `POST /companies` - this should create a new company
-  - `GET /companies` - this should return a list of all the company objects
-  - `GET /companies/:id` - this should return a single company found by its id and it should include all of the ids of users who work there
-  - `PATCH /companies/:id` - this should update an existing company and return the updated company
-  - `DELETE /companies/:id` - this should remove an existing company and return the deleted company
-
-- Here is what a company object looks like:
-
-  ```js
-  {
-    "id": 1,
-    "name": "Rithm School",
-    "logo":
-      "https://avatars3.githubusercontent.com/u/2553776?s=400&u=18c328dafb508c5189bda56889b03b8b722d5f22&v=4",
-    "users": [1, 2], // array of user IDs who work there. ONE-TO-MANY with Users
-    "jobs": [2, 3] // array of job IDs listed by the company. ONE-TO-MANY with Jobs --> THIS IS IMPLEMENTED IN THE FINAL SECTION
-  }
-  ```
-
-## Part III - Jobs
-
-**Before you continue, make sure you have completed the exercises in the previous sections. This exercise builds off of the previous exercise.**
-
-- Add a table for `jobs`, each job should have a:
-
-  - title
-  - salary
-  - equity
-  - company_id
-
-- `jobs` has a one to many relationship with `companies` which means there is a foreign key in the jobs table that references the companies table. In this relationship, one company has many jobs, and each job belongs to a single company. Make sure then when a company is deleted, all of the jobs associated with that company are deleted also.
-
-- `jobs` is also a many to many relationship with `users`, because a user can apply to many jobs. This means you'll also have to create a join table for these two associations. You can call that table `jobs_users` and it should contain a `job_id` and `user_id`.
-
-- Make sure your application has the following routes:
-
-  - `POST /jobs` - this route creates a new job
-  - `GET /jobs` - this route should list all of the jobs.
-  - `GET /jobs/:id` - this route should show information about a specific job
-  - `PATCH /jobs/:id` - this route should let you update a job by its ID
-  - `DELETE /jobs/:id` - this route lets you delete a job posting
-
-- Here is what a job object looks like:
-
-  ```js
-  {
-      "title": "Software Engineer",
-      "salary": "100000",
-      "equity": 4.5,
-      "company_id": 1
-  }
-  ```
-
----
-
-## Part IV - User Authentication + Authorization
-
-**Before you continue, make sure you have completed at least Part I and Part II above**
-
-- Add a column in the `users` table called `username`. This column should have a type of `text` and should be unique and never be null.
-
-- Add a column in the `users` table called `password`. This column should have a type of `text` and should never be null. The column should store a **hashed** password using bcrypt. Make sure that when a user is created and updated, the password is stored securely.
-
-- Add a new route `/users/auth`. This route accepts a POST request with a username and password, and it returns a JWT if the username exists and the password is correct. The JWT should store the id of the logged in user.
-
-- Protect the following routes and make sure only a user who has logged in can use them:
-
-  - `GET /users`
-  - `GET /users/:id`
-  - `GET /jobs`
-  - `GET /jobs/:id`
-  - `GET /companies`
-  - `GET /companies/:id`
-
-- Protect the following routes and make sure they are only accessible by the user with the correct id.
-
-  - `PATCH /users/:id`
-  - `DELETE /users/:id`
-
-## Part V - Company Auth
-
-- Add a column in the `companies` table called `handle`. This column should have a type of `text` and should be unique and never be null.
-
-- Add a column in the `companies` table called `password`. This column should have a type of `text` and should never be null. The column should store a **hashed** password using bcrypt. Make sure that when a company is created and updated, the password is stored securely.
-
-- Add a new route `/companies/auth`. This route accepts a POST request with a company's `handle` and `password`, and it returns a JWT if the handle exists and the password is correct. The JWT should store the id of the logged in company.
-
-- Allow logged in companies to see the following routes (these are all the routes logged in users can see):
-
-  - `GET /users`
-  - `GET /users/:id`
-  - `GET /jobs`
-  - `GET /jobs/:id`
-  - `GET /companies`
-  - `GET /companies/:id`
-
-- Protect the following routes and make sure they are only accessible by the company with the correct id.
-
-  - `PATCH /companies/:id`
-  - `DELETE /companies/:id`
-
-- Protect the following routes so that only companies can post jobs, and posted jobs can only be edited and deleted by the company that created them.
-
-  - `POST /jobs`
-  - `PATCH /jobs/:id`
-  - `DELETE /jobs/:id`
-
----
-
-## Part VI - Testing + Validation
-
-**Before you continue, make sure you have completed at least Part I and Part II of this exercise**
-
-- Make sure that there is validation each time a `user` is created or updated.
-- Make sure that there is validation each time a `company` is created or updated.
-- Make sure that there is validation each time a `job` is created or updated.
-- Add tests for your `users`, `companies`, and `jobs` route.
-
----
-
-# Solutions
-
-To get any of these solutions running locally:
-
-1.  Fork/clone the repository
-2.  `cd` into a folder
-3.  `npm install`
-4.  `psql < schema.sql`
-5.  `nodemon` or `node app.js`
+1.  As a company, I should be able to sign up, which directs me to my job listings.
+1.  As a company, I should be able to log in, which directs me to my job listings.
+1.  As a company, I should have a feed which consists of all of my job listings.
+1.  As a company, I should be able to visit my profile page when logging in.
+1.  As a company, I should be able to add a job listing.
+1.  As a company, I should be able to update a job listing.
+1.  As a company, I should be able to remove a job listing.
+1.  As a company, I should have a list of all of the users who applied to my job listings.
+1.  As a company, I should be able to search for users.
+1.  (_Bonus_) As a company, I should be able to upload a company logo.
+1.  (_Bonus_) As a company, I should be able to respond to applicants.

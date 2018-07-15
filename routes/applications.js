@@ -2,16 +2,12 @@ const express = require('express');
 // need mergeParams because of how our route is written /jobs/:id/applications
 const router = express.Router({ mergeParams: true });
 const db = require('../db');
-const jwt = require('jsonwebtoken');
 const {
   ensureloggedin,
-  ensureCorrectCompany,
-  ensureLoginCompany,
-  ensureCorrectUser,
+
   ensureLoginUser
 } = require('../middleware/auth');
-const { validate } = require('jsonschema');
-const jobSchema = require('../jsonSchema/jobs');
+
 const APIError = require('../APIError');
 
 router.get('', ensureloggedin, async function(req, res, next) {
