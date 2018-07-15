@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const APIError = require('../APIError');
 function ensureloggedin(req, res, next) {
   try {
     const token = req.headers.authorization;
@@ -20,14 +21,16 @@ function ensureCorrectUser(req, res, next) {
     if (decodedToken.username === req.params.username) {
       return next();
     } else {
-      return res.json({
-        message: 'Unauthorized'
-      });
+      return next(
+        new APIError(
+          403,
+          'Forbidden',
+          `Unauthorized, you cannot delete other's account.`
+        )
+      );
     }
   } catch (err) {
-    return res.json({
-      message: 'Unauthorized'
-    });
+    return next(new APIError());
   }
 }
 

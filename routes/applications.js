@@ -23,10 +23,12 @@ router.get('', ensureloggedin, async function(req, res, next) {
     if (!jobExists.rowCount) {
       return next(new APIError(404, 'Not FOUND', 'Job does not exists!'));
     }
+
     const jobApp = await db.query(
       'SELECT * FROM applications WHERE job_id=$1',
       [req.params.job_id]
     );
+
     return res.json(jobApp.rows);
   } catch (err) {
     return next(err);
@@ -44,7 +46,7 @@ router.get('/:id', ensureloggedin, async function(req, res, next) {
       return next(new APIError(404, 'Not FOUND', 'Job does not exists!'));
     }
 
-    return res.json(jobApp.rows);
+    return res.json(jobApp.rows[0]);
   } catch (err) {
     return next(err);
   }

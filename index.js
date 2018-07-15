@@ -41,7 +41,7 @@ app.use((error, request, response, next) => {
   // format built-in errors
   //console.error(error);
   if (!(error instanceof APIError)) {
-    error = new APIError(500, error.type, error.message);
+    error = new APIError(404, 'Not Found', 'Invalid URL.');
   }
   // log the error stack if we're in development
 

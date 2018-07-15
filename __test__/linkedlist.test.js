@@ -45,6 +45,14 @@ beforeAll(async () => {
     job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
   );`);
+
+  await db.query(`CREATE TABLE applications
+  (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
+    username TEXT REFERENCES users(username) ON DELETE CASCADE
+  );
+  `);
 });
 // SET UP
 beforeEach(async () => {
@@ -92,17 +100,16 @@ beforeEach(async () => {
   await db.query(
     `INSERT INTO jobs (title, salary, equity, company) VALUES('Super Engineer', '500000', 3.4, 'Warriors') RETURNING *`
   );
-  await db.query(
-    `INSERT INTO jobs (title, salary, equity, company) VALUES('Game Tester', '200000', 5, 'Nintendo') RETURNING *`
-  );
 });
 
 afterEach(async () => {
+  await db.query('DELETE FROM jobs');
   await db.query('DELETE FROM users');
   await db.query('DELETE FROM companies');
 });
 
 afterAll(async () => {
+  await db.query('DROP TABLE IF EXISTS applications');
   await db.query('DROP TABLE IF EXISTS jobs_users');
   await db.query('DROP TABLE IF EXISTS jobs');
   await db.query('DROP TABLE IF EXISTS users');
@@ -322,6 +329,149 @@ describe(`PATCH / users/:username`, () => {
   });
 });
 
+describe(`GET / companies`, () => {
+  test('gets all the companies', async () => {
+    const response = await request(app)
+      .get('/companies')
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body[0].name).toBe('Warriors');
+  });
+});
+
+describe(`GET / companies/:handle`, () => {
+  test('gets a list of 1 company', async () => {
+    const response = await request(app)
+      .get(`/companies/${auth.current_handle}`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('Warriors');
+  });
+});
+
+describe(`PATCH / companies/:handle`, () => {
+  test('successfully updates a company', async () => {
+    const response = await request(app)
+      .patch(`/companies/${auth.current_handle}`)
+      .send({
+        name: 'rithm',
+        email: 'google@gmail.com',
+        handle: 'rithm',
+        password: 'foo123',
+        logo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
+      })
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('rithm');
+  });
+});
+
+describe(`POST /jobs`, () => {
+  test('successfully post a new job from one company', async () => {
+    const response = await request(app)
+      .post('/jobs')
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'Gamer Tester',
+        salary: '200000',
+        equity: 5.5
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Gamer Tester');
+  });
+});
+
+describe(`GET / jobs`, () => {
+  test('gets all the jobs', async () => {
+    const response = await request(app)
+      .get('/jobs')
+      .set('authorization', auth.company_token);
+    auth.jobid = response.body[0].id;
+    expect(response.status).toBe(200);
+    expect(response.body[0].title).toBe('Super Engineer');
+  });
+});
+
+describe(`GET / jobs/:id`, () => {
+  test('gets a list of 1 jobs', async () => {
+    const response = await request(app)
+      .get(`/jobs/${++auth.jobid}`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Super Engineer');
+  });
+});
+
+describe(`POST /jobs/:job_id/applications`, () => {
+  test('successfully appy for a job and view the applications', async () => {
+    const response = await request(app)
+      .post(`/jobs/${++auth.jobid}/applications`)
+      .set('authorization', auth.user_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body.job_id).toBe(auth.jobid);
+
+    //get all the applications
+    const res = await request(app)
+      .get(`/jobs/${auth.jobid}/applications`)
+      .set('authorization', auth.user_token);
+    expect(res.status).toBe(200);
+    expect(res.body[0].job_id).toBe(auth.jobid);
+  });
+});
+
+describe(`GET / jobs/:id/application/:id`, () => {
+  test('gets one job applications and deletes one application', async () => {
+    const response = await request(app)
+      .post(`/jobs/${++auth.jobid}/applications`)
+      .set('authorization', auth.user_token);
+
+    expect(response.status).toBe(200);
+    expect(response.body.job_id).toBe(auth.jobid);
+
+    //gets one job applications and
+    const res = await request(app)
+      .get(`/jobs/${auth.jobid}/applications/2`)
+      .set('authorization', auth.user_token);
+
+    expect(res.status).toBe(200);
+    expect(res.body.job_id).toBe(auth.jobid);
+
+    //deletes one application
+    const res1 = await request(app)
+      .delete(`/jobs/${auth.jobid}/applications/2`)
+      .set('authorization', auth.user_token);
+
+    expect(res1.status).toBe(200);
+    expect(res1.body.message).toBe('Deleted job application!!!');
+  });
+});
+
+describe(`PATCH / jobs/:id`, () => {
+  test('successfully updates a job if it belongs to the correct company', async () => {
+    const response = await request(app)
+      .patch(`/jobs/${++auth.jobid}`)
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'Student',
+        salary: '100000',
+        equity: 1
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.title).toBe('Student');
+  });
+});
+
+describe(`DELETE / jobs/:id`, () => {
+  test('successfully deletes a job if the job belongs to the correct company', async () => {
+    const response = await request(app)
+      .delete(`/jobs/${++auth.jobid}`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Deleted a job!!!' });
+  });
+});
+
 describe(`DELETE / users/:username`, () => {
   test('successfully deletes own user', async () => {
     const response = await request(app)
@@ -333,126 +483,26 @@ describe(`DELETE / users/:username`, () => {
     expect(response.body).toEqual({ message: 'Deleted user!' });
   });
 
-  // figure out later
-  // test('cannot delete other user', async () => {
-  //   const username = auth.current_username + '1';
-  //   const response = await request(app)
-  //     .delete(`/users/${username}`)
-  //     .set('authorization', auth.user_token);
-  //   delete auth.current_username;
-  //   delete auth.user_token;
-  //   expect(response.status).toBe(403);
-  // });
+  test('cannot delete other user', async () => {
+    const username = auth.current_username + '1';
+    const response = await request(app)
+      .delete(`/users/${username}`)
+      .set('authorization', auth.user_token);
+    delete auth.current_username;
+    delete auth.user_token;
+    expect(response.status).toBe(403);
+    expect(response.body.error.title).toBe('Forbidden');
+  });
 });
 
-// describe(`GET / companies`, () => {
-//   test('gets all the companies', async () => {
-//     const response = await request(app)
-//       .get('/companies')
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body[0].name).toBe('michael');
-//   });
-// });
-
-// describe(`GET / companies/:handle`, () => {
-//   test('gets a list of 1 company', async () => {
-//     const response = await request(app)
-//       .get(`/companies/${auth.current_handle}`)
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body.name).toBe('michael');
-//   });
-// });
-
-// describe(`PATCH / companies/:handle`, () => {
-//   test('successfully updates a company', async () => {
-//     const response = await request(app)
-//       .patch(`/companies/${auth.current_handle}`)
-//       .send({
-//         name: 'rithm',
-//         email: 'google@gmail.com',
-//         handle: 'rithm',
-//         password: 'foo123',
-//         logo: 'https://avatars0.githubusercontent.com/u/13444851?s=460&v=4'
-//       })
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body.name).toBe('rithm');
-//   });
-// });
-
-// describe(`POST /jobs`, () => {
-//   test('successfully post a new job from one company', async () => {
-//     const response = await request(app)
-//       .post('/jobs')
-//       .set('authorization', auth.company_token)
-//       .send({
-//         title: 'Gamer Tester',
-//         company: 'rithm',
-//         salary: '200000',
-//         equity: 5.5
-//       });
-//     //console.log(response.body);
-//     expect(response.status).toBe(200);
-//     expect(response.body.company).toBe('rithm');
-//   });
-// });
-
-// describe(`GET / jobs`, () => {
-//   test('gets all the jobs', async () => {
-//     const response = await request(app)
-//       .get('/jobs')
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body[0].title).toBe('Gamer Tester');
-//   });
-// });
-
-// describe(`GET / jobs/:id`, () => {
-//   test('gets a list of 1 jobs', async () => {
-//     const response = await request(app)
-//       .get(`/jobs/1`)
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body.company).toBe('rithm');
-//   });
-// });
-
-// describe(`PATCH / jobs/:id`, () => {
-//   test('successfully updates a job if it belongs to the correct company', async () => {
-//     const response = await request(app)
-//       .patch(`/jobs/1`)
-//       .set('authorization', auth.company_token)
-//       .send({
-//         title: 'Student',
-//         company: 'rithm',
-//         salary: '100000',
-//         equity: 1
-//       });
-//     expect(response.status).toBe(200);
-//     expect(response.body.title).toBe('Student');
-//   });
-// });
-
-// describe(`DELETE / jobs/:id`, () => {
-//   test('successfully deletes a job if the job belongs to the correct company', async () => {
-//     const response = await request(app)
-//       .delete(`/jobs/1`)
-//       .set('authorization', auth.company_token);
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEqual({ message: 'Deleted a job!!!' });
-//   });
-// });
-
-// describe(`DELETE / companies/:handle`, () => {
-//   test('successfully deletes own company', async () => {
-//     const response = await request(app)
-//       .delete(`/companies/${auth.current_handle}`)
-//       .set('authorization', auth.company_token);
-//     delete auth.current_handle;
-//     delete auth.company_token;
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEqual({ message: 'Deleted company!' });
-//   });
-// });
+describe(`DELETE / companies/:handle`, () => {
+  test('successfully deletes own company', async () => {
+    const response = await request(app)
+      .delete(`/companies/${auth.current_handle}`)
+      .set('authorization', auth.company_token);
+    delete auth.current_handle;
+    delete auth.company_token;
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Deleted company!' });
+  });
+});
